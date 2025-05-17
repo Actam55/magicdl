@@ -10,11 +10,18 @@ The game is a project I am working on to practice web development skills, includ
 
 ## Future Features
 -[ ] Get card data from the Scryfall API instead of a local file
+
 -[ ] Set a random card as the card to guess from the Scryfall API
+
 -[ ] Add a auto complete feature to suggest card names based on what the user has typed so far
+
 -[ ] Add a difficulty setting to limit the number of cards to guess from
+
 -[ ] Add a timer to see how fast you can guess the card
+
 -[ ] Add a win animation when you guess the card correctly
+
 -[ ] For CMC add an arrow to indicate if the CMC is higher or lower than the card you are guessing
+
 -[ ] Add a hint feature to give you a hint about the card
 
