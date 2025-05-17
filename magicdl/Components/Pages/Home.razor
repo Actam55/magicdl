@@ -1,14 +1,26 @@
 ﻿@page "/"
 
+<style>
+    .word-wrap-box {
+        flex: 0 0 200px;
+        max-width: 200px;
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+</style>
+
 <PageTitle>Home</PageTitle>
 
 <div class="d-flex justify-content-center">
-    <TextInput Value="@cardGuessString" ValueExpression="() => cardGuessString" ValueChanged="(value) => CardGuessChanged(value)" TextAlignment="Alignment.Center" />
+    <InputText value="@currentGuessString" ValueExpression="() => currentGuessString" ValueChanged="(value) => CardGuessChanged(value)" TextAlignment="Alignment.Center"/>
 </div>
-<div class="mb-3">Card Guessed: @cardGuessString</div>
+@* <div class="d-flex justify-content-center">
+    <TextInput @bind-Value="cardGuessString" @onchange="CardGuessChanged" TextAlignment="Alignment.Center" />
+</div> *@
 
 <div class="container text-center">
-    <div class="row">
+    <div class="row ">
         <div class="col">
             Card Name
         </div>
@@ -22,38 +34,72 @@
 </div>
 
 <div class="container text-center">
-    @foreach (var guess in guessHistory)
+    @foreach (MTGCard guess in guessHistory)
     {
-        <div class="row mb-2 border-bottom">
-            <div class="col">@guess.Name</div>
-            <div class="col">@guess.Type</div>
-            <div class="col">@guess.CMC</div>
+        <div class="row mb-2 p-2 justify-content-center">
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.Name.Equals(correctCard.Name, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.Name </div>
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.SetApperances, correctCard.SetApperances))">
+                @string.Join(", ", guess.SetApperances)
+            </div>
+            <div class="col border rounded fw-bold p-3 word-wrap-box @(guess.CMC.Equals(correctCard.CMC, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.CMC</div>
         </div>
     }
 </div>
 
+<p>Guess: '@currentGuess.Name'</p>
+<p>Correct: '@correctCard.Name'</p>
+
 @code {
+    private List<MTGCard> cardList = new List<MTGCard>();
     private List<MTGCard> guessHistory = new List<MTGCard>();
-    private string? cardGuessString = null;
-    private MTGCard cardGuess = new MTGCard();
-    private MTGCard correctCardGuess = new MTGCard();
+    private MTGCard currentGuess = new MTGCard();
+    private MTGCard correctCard = new MTGCard();
+    private string currentGuessString = string.Empty;
 
-
-    public class MTGCard
+    public enum MatchLevel
     {
-        public string Name { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
-        public string SetName { get; set; } = string.Empty;
-        public string Rarity { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string CMC { get; set; } = string.Empty;
+        None,
+        Partial,
+        Full
     }
 
-    public void CardGuessChanged(string? value)
+    public MatchLevel GetMatchLevel(List<string> guessList, List<string> correctList)
     {
-        cardGuess = SetCard(value);
-        guessHistory.Insert(0, cardGuess);
-        cardGuessString = string.Empty;
+        if (guessList == null || correctList == null || guessList.Count == 0)
+            return MatchLevel.None;
+
+        bool exactMatch = guessList.All(item => correctList.Contains(item))
+               && correctList.All(item => guessList.Contains(item));
+        bool anyMatch = guessList.Any(item => correctList.Contains(item));
+
+        if (exactMatch)
+            return MatchLevel.Full;
+        else if (anyMatch)
+            return MatchLevel.Partial;
+        else
+            return MatchLevel.None;
+    }
+
+    public string MatchLevelToCssClass(MatchLevel level) => level switch
+    {
+        MatchLevel.Full => "bg-success",
+        MatchLevel.Partial => "bg-warning",
+        _ => "bg-danger"
+    };
+
+    public void CardGuessChanged(string value)
+    {
+        currentGuess = SetCard(value);
+        if (string.IsNullOrEmpty(currentGuess.Name))
+        {
+            //Give a message that the card was not found.
+            return;
+        }
+
+        guessHistory.Insert(0, currentGuess);
+        currentGuessString = string.Empty;
         StateHasChanged();
     }
 
@@ -63,18 +109,32 @@
         {
             return new MTGCard();
         }
-        MTGCard card = new MTGCard();
-        card.Name = value;
-        card.Type = "Instant";
-        card.CMC = "1W";
-        return card;
+
+        foreach (MTGCard card in cardList)
+        {
+            if (value.Equals(card.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return card;
+            }
+        }
+        return new MTGCard();
     }
     protected override void OnInitialized()
     {
-        MTGCard correctCardGuess = new MTGCard();
-        correctCardGuess.Name = "Path To Exile";
-        correctCardGuess.Type = "Instant";
-        correctCardGuess.CMC = "1W";
+        cardList = CardData.GetDummyCards();  // Load cards first
+
+        string val = "Lightning Bolt";
+
+        foreach (MTGCard card in cardList)
+        {
+            if (val.Equals(card.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                correctCard = card;
+                break; // Optional: stop once found
+            }
+        }
+
+        // Now correctCardGuess holds the card if found, or default empty card
     }
 
 }
