@@ -18,11 +18,13 @@ The game is a project I am working on to practice web development skills, includ
 
 - [ ] Add a difficulty setting to limit the number of cards to guess from
 
-- [ ] Add a timer to see how fast you can guess the card
+- [ ] For CMC add an arrow to indicate if the CMC is higher or lower than the card you are guessing
+
+- [ ] Host the webapp so people can use it
 
 - [ ] Add a win animation when you guess the card correctly
 
-- [ ] For CMC add an arrow to indicate if the CMC is higher or lower than the card you are guessing
+- [ ] Add a timer to see how fast you can guess the card
 
 - [ ] Add a hint feature to give you a hint about the card
 
