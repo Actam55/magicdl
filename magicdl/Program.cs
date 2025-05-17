@@ -1,10 +1,13 @@
 using magicdl.Components;
 
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddBlazorBootstrap();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+       .AddInteractiveServerComponents();
 
 var app = builder.Build();
 

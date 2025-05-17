@@ -13,4 +13,7 @@
     <SourceRoot Include="C:\Users\l1999\.nuget\packages\" />
     <SourceRoot Include="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\" />
   </ItemGroup>
+  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)blazor.bootstrap\3.3.1\buildTransitive\Blazor.Bootstrap.props" Condition="Exists('$(NuGetPackageRoot)blazor.bootstrap\3.3.1\buildTransitive\Blazor.Bootstrap.props')" />
+  </ImportGroup>
 </Project>

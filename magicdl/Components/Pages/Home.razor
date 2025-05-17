@@ -2,6 +2,79 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="d-flex justify-content-center">
+    <TextInput Value="@cardGuessString" ValueExpression="() => cardGuessString" ValueChanged="(value) => CardGuessChanged(value)" TextAlignment="Alignment.Center" />
+</div>
+<div class="mb-3">Card Guessed: @cardGuessString</div>
 
-Welcome to your new app.
+<div class="container text-center">
+    <div class="row">
+        <div class="col">
+            Card Name
+        </div>
+        <div class="col">
+            Type
+        </div>
+        <div class="col">
+            CMC
+        </div>
+    </div>
+</div>
+
+<div class="container text-center">
+    @foreach (var guess in guessHistory)
+    {
+        <div class="row mb-2 border-bottom">
+            <div class="col">@guess.Name</div>
+            <div class="col">@guess.Type</div>
+            <div class="col">@guess.CMC</div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<MTGCard> guessHistory = new List<MTGCard>();
+    private string? cardGuessString = null;
+    private MTGCard cardGuess = new MTGCard();
+    private MTGCard correctCardGuess = new MTGCard();
+
+
+    public class MTGCard
+    {
+        public string Name { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public string SetName { get; set; } = string.Empty;
+        public string Rarity { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string CMC { get; set; } = string.Empty;
+    }
+
+    public void CardGuessChanged(string? value)
+    {
+        cardGuess = SetCard(value);
+        guessHistory.Insert(0, cardGuess);
+        cardGuessString = string.Empty;
+        StateHasChanged();
+    }
+
+    public MTGCard SetCard(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return new MTGCard();
+        }
+        MTGCard card = new MTGCard();
+        card.Name = value;
+        card.Type = "Instant";
+        card.CMC = "1W";
+        return card;
+    }
+    protected override void OnInitialized()
+    {
+        MTGCard correctCardGuess = new MTGCard();
+        correctCardGuess.Name = "Path To Exile";
+        correctCardGuess.Type = "Instant";
+        correctCardGuess.CMC = "1W";
+    }
+
+}
