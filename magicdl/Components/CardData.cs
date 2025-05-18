@@ -18,7 +18,7 @@ namespace magicdl.Components
                     SetApperances = new List<string> {"Alpha", "Beta", "Revised"},
                     Rarity = "Common",
                     Type = new List<string> {"Instant"},
-                    Color = new List<string> {"Red" },
+                    Color = new List<string> {"R" },
                     CMC = "1"
                 },
                 new MTGCard
@@ -28,7 +28,7 @@ namespace magicdl.Components
                     SetApperances = new List<string> {"Alpha"},
                     Rarity = "Rare",
                     Type = new List<string> {"Artifact"},
-                    Color = new List<string> {"Colorless"},
+                    Color = new List<string> {""},
                     CMC = "0"
                 },
                 new MTGCard
@@ -38,7 +38,7 @@ namespace magicdl.Components
                     SetApperances = new List<string> {"Revised"},
                     Rarity = "Uncommon",
                     Type = new List<string> {"Instant" },
-                    Color = new List < string > { "Blue" },
+                    Color = new List < string > { "B" },
                     CMC = "2"
                 }
                 // Add more as needed

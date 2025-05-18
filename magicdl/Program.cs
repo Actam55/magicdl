@@ -1,6 +1,7 @@
 using magicdl.Components;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddBlazorBootstrap();

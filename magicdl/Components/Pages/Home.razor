@@ -40,16 +40,19 @@
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.Name.Equals(correctCard.Name, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.Name </div>
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.SetApperances, correctCard.SetApperances))">
-                @string.Join(", ", guess.SetApperances)
-            </div>
+            @* <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.SetApperances, correctCard.SetApperances))">@string.Join(", ", guess.SetApperances)</div> *@
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.ReleaseDate == correctCard.ReleaseDate ? "bg-success" : "bg-danger")">@(guess.ReleaseDate.HasValue? guess.ReleaseDate.Value.ToString("yyyy-MM-dd") : "Unknown") </div>
+
             <div class="col border rounded fw-bold p-3 word-wrap-box @(guess.CMC.Equals(correctCard.CMC, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.CMC</div>
         </div>
     }
 </div>
 
+<Button @onclick="GetCardListAsync" class="btn btn-primary">Get Card List</Button>
+
 <p>Guess: '@currentGuess.Name'</p>
 <p>Correct: '@correctCard.Name'</p>
+<p>Cards Found: '@cardsFound'</p>
 
 @code {
     private List<MTGCard> cardList = new List<MTGCard>();
@@ -57,6 +60,9 @@
     private MTGCard currentGuess = new MTGCard();
     private MTGCard correctCard = new MTGCard();
     private string currentGuessString = string.Empty;
+    private HttpResponseMessage response = new HttpResponseMessage();
+    private string json = string.Empty;
+    private int cardsFound;
 
     public enum MatchLevel
     {
@@ -119,22 +125,58 @@
         }
         return new MTGCard();
     }
-    protected override void OnInitialized()
+
+    public async Task GetCardListAsync()
     {
-        cardList = CardData.GetDummyCards();  // Load cards first
+        cardList = new List<MTGCard>();
+        Random rnd = new Random();
+        HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Magicdl/1.0");
+        client.DefaultRequestHeaders.Accept.ParseAdd(("application/json;q=0.9,*/*;q=0.8"));
+        // response = await client.GetAsync("https://api.scryfall.com/cards/named?exact=lightning+bolt");
+        response = await client.GetAsync("https://api.scryfall.com/cards/search?order=edhrec&dir=asc&q=id%3Awubrg+-t=land&page=1");
+        json = await response.Content.ReadAsStringAsync();
 
-        string val = "Lightning Bolt";
 
-        foreach (MTGCard card in cardList)
+        using (JsonDocument document = JsonDocument.Parse(json))
         {
-            if (val.Equals(card.Name, StringComparison.OrdinalIgnoreCase))
+            JsonElement root = document.RootElement;
+            foreach (JsonElement cardElement in root.GetProperty("data").EnumerateArray())
             {
-                correctCard = card;
-                break; // Optional: stop once found
+                MTGCard card = new MTGCard();
+                card.Name = cardElement.GetProperty("name").GetString();
+                card.CMC = cardElement.GetProperty("cmc").GetDouble().ToString();
+                string typeLine = cardElement.GetProperty("type_line").GetString();
+                string beforeDash = typeLine.Split('—')[0].Trim();
+                card.Type = beforeDash.Split(' ').ToList();
+                card.Color = cardElement.GetProperty("color_identity").EnumerateArray().Select(c => c.GetString()).ToList();
+                if(card.Color.Count == 0)
+                {
+                    card.Color.Add("Colorless");
+                }
+                string ReleaseDate = cardElement.GetProperty("released_at").GetString();
+                if (DateOnly.TryParse(ReleaseDate, out DateOnly parsedDate))
+                {
+                    card.SetApperances.Add(parsedDate.ToString("yyyy-MM-dd"));
+                }
+                else
+                {
+                    card.SetApperances.Add(ReleaseDate ?? "Unknown");
+                }
+
+                card.Oracle_Text = cardElement.GetProperty("oracle_text").GetString();
+                cardList.Add(card);
             }
         }
-
-        // Now correctCardGuess holds the card if found, or default empty card
+        correctCard = cardList[0];
+        cardsFound = cardList.Count();
+        int randomIndex = rnd.Next(0, cardList.Count);
+        correctCard = cardList[randomIndex];
     }
 
+
+    protected override async void OnInitialized()
+    {
+        await GetCardListAsync();  // Load cards first
+    }
 }
