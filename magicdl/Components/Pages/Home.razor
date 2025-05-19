@@ -12,8 +12,12 @@
 
 <PageTitle>Home</PageTitle>
 
-<div class="d-flex justify-content-center">
+@* <div class="d-flex justify-content-center">
     <InputText value="@currentGuessString" ValueExpression="() => currentGuessString" ValueChanged="(value) => CardGuessChanged(value)" TextAlignment="Alignment.Center"/>
+</div> *@
+
+<div class="d-flex justify-content-center">
+    <AutoComplete @bind-Value="currentGuessString" TItem="MTGCard" DataProvider="CardListProvider" PropertyName="Name" Placeholder="Search for a card" OnChanged="(MTGCard card) => OnAutoCompleteChanged(card)" Size="AutoCompleteSize.Large" />
 </div>
 
 <div class="container text-center">
@@ -38,7 +42,7 @@
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
             @* <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.SetApperances, correctCard.SetApperances))">@string.Join(", ", guess.SetApperances)</div> *@
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.ReleaseDate == correctCard.ReleaseDate ? "bg-success" : "bg-danger")">@(guess.ReleaseDate.HasValue? guess.ReleaseDate.Value.ToString("yyyy-MM-dd") : "Unknown") </div>
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.ReleaseDate == correctCard.ReleaseDate ? "bg-success" : "bg-danger")">@(guess.ReleaseDate.HasValue ? guess.ReleaseDate.Value.ToString("yyyy") : "Unknown") </div>
 
             <div class="col border rounded fw-bold p-3 word-wrap-box @(guess.CMC.Equals(correctCard.CMC, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.CMC</div>
         </div>
@@ -49,6 +53,8 @@
 
 <p>Guess: '@currentGuess.Name'</p>
 <p>Correct: '@correctCard.Name'</p>
+<p>Release Date: '@(correctCard.ReleaseDate.HasValue? correctCard.ReleaseDate.Value.ToString("yyyy") : "Unknown")'</p>
+
 <p>Cards Found: '@cardsFound'</p>
 
 @code {
@@ -66,6 +72,36 @@
         None,
         Partial,
         Full
+    }
+
+    private async Task<AutoCompleteDataProviderResult<MTGCard>> CardListProvider(AutoCompleteDataProviderRequest<MTGCard> request)
+    {
+        string filterText = request.Filter.Value;
+        Console.WriteLine($"User typed: {filterText}");
+
+        var filteredCardList = cardList
+            .Where(card => card.Name.Contains(filterText, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(card => card.Name)
+            .Take(10)
+            .ToList();
+
+        return await Task.FromResult(request.ApplyTo(filteredCardList.OrderBy(card => card.Name)));
+    }
+
+    private void OnAutoCompleteChanged(MTGCard card)
+    {
+        if (card is null || string.IsNullOrEmpty(card.Name))
+        {
+            // Display message or toast
+            Console.WriteLine("Card not found.");
+            return;
+        }
+
+        currentGuess = card;
+        guessHistory.Insert(0, currentGuess);
+        cardList.Remove(currentGuess);
+        currentGuessString = string.Empty;
+
     }
 
     public MatchLevel GetMatchLevel(List<string> guessList, List<string> correctList)
@@ -125,6 +161,7 @@
 
     public async Task GetCardListAsync()
     {
+        guessHistory = new List<MTGCard>();
         cardList = new List<MTGCard>();
         Random rnd = new Random();
         HttpClient client = new HttpClient();
@@ -150,29 +187,32 @@
                 {
                     card.Color.Add("Colorless");
                 }
-                string ReleaseDate = cardElement.GetProperty("released_at").GetString();
-                if (DateOnly.TryParse(ReleaseDate, out DateOnly parsedDate))
+                string releaseDateStr = cardElement.GetProperty("released_at").GetString();
+                if (DateOnly.TryParse(releaseDateStr, out DateOnly parsedDate))
                 {
-                    card.SetApperances.Add(parsedDate.ToString("yyyy-MM-dd"));
+                    card.ReleaseDate = parsedDate;
                 }
                 else
                 {
-                    card.SetApperances.Add(ReleaseDate ?? "Unknown");
+                    card.ReleaseDate = null;
                 }
 
                 card.Oracle_Text = cardElement.GetProperty("oracle_text").GetString();
                 cardList.Add(card);
             }
         }
-        correctCard = cardList[0];
         cardsFound = cardList.Count();
         int randomIndex = rnd.Next(0, cardList.Count);
         correctCard = cardList[randomIndex];
+
     }
 
 
     protected override async void OnInitialized()
     {
+        Random rnd = new Random();
         await GetCardListAsync();  // Load cards first
+        int randomIndex = rnd.Next(0, cardList.Count);
+        correctCard = cardList[randomIndex];
     }
 }
