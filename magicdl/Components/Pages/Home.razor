@@ -18,7 +18,7 @@
 
 <div class="d-flex justify-content-center">
     <AutoComplete @bind-Value="currentGuessString" TItem="MTGCard" DataProvider="CardListProvider" PropertyName="Name" Placeholder="Search for a card" OnChanged="(MTGCard card) => OnAutoCompleteChanged(card)" Size="AutoCompleteSize.Large" />
-</div>
+</div> 
 
 <div class="container text-center">
     <div class="row ">
@@ -42,9 +42,38 @@
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
             <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
             @* <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.SetApperances, correctCard.SetApperances))">@string.Join(", ", guess.SetApperances)</div> *@
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.ReleaseDate == correctCard.ReleaseDate ? "bg-success" : "bg-danger")">@(guess.ReleaseDate.HasValue ? guess.ReleaseDate.Value.ToString("yyyy") : "Unknown") </div>
+            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.ReleaseDate?.Year == correctCard.ReleaseDate?.Year ? "bg-success" : "bg-danger")">
+                @if (guess.ReleaseDate.HasValue)
+                {
+                    @guess.ReleaseDate.Value.Year
+                    @if (guess.ReleaseDate.Value.Year < correctCard.ReleaseDate?.Year)
+                    {
+                        <span>⬆️</span> <!-- Guessed card is from an earlier year -->
+                    }
+                    else if (guess.ReleaseDate.Value.Year > correctCard.ReleaseDate?.Year)
+                    {
+                        <span>⬇️</span> <!-- Guessed card is from a later year -->
+                    }
+                    else
+                    {
+                    }
+                }
+            </div>
+            <div class="col border rounded fw-bold p-3 word-wrap-box @(guess.CMC == correctCard.CMC ? "bg-success" : "bg-danger")">
+                @guess.CMC
+                @if (guess.CMC < correctCard.CMC)
+                {
+                    <span>⬆️</span> <!-- Guessed card has lower CMC -->
+                }
+                else if (guess.CMC > correctCard.CMC)
+                {
+                    <span>⬇️</span> <!-- Guessed card has higher CMC -->
+                }
+                else
+                {
+                }
+            </div>
 
-            <div class="col border rounded fw-bold p-3 word-wrap-box @(guess.CMC.Equals(correctCard.CMC, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.CMC</div>
         </div>
     }
 </div>
@@ -53,9 +82,8 @@
 
 <p>Guess: '@currentGuess.Name'</p>
 <p>Correct: '@correctCard.Name'</p>
-<p>Release Date: '@(correctCard.ReleaseDate.HasValue? correctCard.ReleaseDate.Value.ToString("yyyy") : "Unknown")'</p>
-
 <p>Cards Found: '@cardsFound'</p>
+<p> List of prints: '@listOfPrints'</p>
 
 @code {
     private List<MTGCard> cardList = new List<MTGCard>();
@@ -66,6 +94,7 @@
     private HttpResponseMessage response = new HttpResponseMessage();
     private string json = string.Empty;
     private int cardsFound;
+    private string listOfPrints = string.Empty;
 
     public enum MatchLevel
     {
@@ -81,11 +110,29 @@
 
         var filteredCardList = cardList
             .Where(card => card.Name.Contains(filterText, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(card => card.Name)
-            .Take(10)
+            .OrderBy(card =>
+            {
+                var name = card.Name;
+
+                if (name.Equals(filterText, StringComparison.OrdinalIgnoreCase))
+                    return 0;
+                else if (name.StartsWith(filterText, StringComparison.OrdinalIgnoreCase))
+                    return 1;
+                else if (name.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return 2;
+                else
+                    return 3;
+            })
+            .ThenBy(card =>
+            {
+                // Secondary sort by index of match, so 'Bolt' appears before 'Firebolt' if search is 'bolt'
+                int index = card.Name.IndexOf(filterText, StringComparison.OrdinalIgnoreCase);
+                return index == -1 ? int.MaxValue : index;
+            })
+            .ThenBy(card => card.Name) // Final fallback alphabetical
             .ToList();
 
-        return await Task.FromResult(request.ApplyTo(filteredCardList.OrderBy(card => card.Name)));
+        return await Task.FromResult(request.ApplyTo(filteredCardList));
     }
 
     private void OnAutoCompleteChanged(MTGCard card)
@@ -139,6 +186,7 @@
 
         guessHistory.Insert(0, currentGuess);
         currentGuessString = string.Empty;
+        
         StateHasChanged();
     }
 
@@ -178,7 +226,7 @@
             {
                 MTGCard card = new MTGCard();
                 card.Name = cardElement.GetProperty("name").GetString();
-                card.CMC = cardElement.GetProperty("cmc").GetDouble().ToString();
+                card.CMC = cardElement.GetProperty("cmc").GetDouble();
                 string typeLine = cardElement.GetProperty("type_line").GetString();
                 string beforeDash = typeLine.Split('—')[0].Trim();
                 card.Type = beforeDash.Split(' ').ToList();
@@ -197,6 +245,39 @@
                     card.ReleaseDate = null;
                 }
 
+                // if (cardElement.TryGetProperty("prints_search_uri", out JsonElement printsSearchUriElement))
+                // {
+                //     string printsSearchUri = printsSearchUriElement.GetString();
+                //     if (!string.IsNullOrEmpty(printsSearchUri))
+                //     {
+                //         HttpResponseMessage printsResponse = await client.GetAsync(printsSearchUri);
+                //         string printsJson = await printsResponse.Content.ReadAsStringAsync();
+
+                //         using (JsonDocument printsDoc = JsonDocument.Parse(printsJson))
+                //         {
+                //             JsonElement printsRoot = printsDoc.RootElement;
+                //             var releaseDates = new List<DateOnly>();
+
+                //             foreach (JsonElement printing in printsRoot.GetProperty("data").EnumerateArray())
+                //             {
+                //                 if (printing.TryGetProperty("released_at", out JsonElement releasedAt))
+                //                 {
+                //                     string dateStr = releasedAt.GetString();
+                //                     if (DateOnly.TryParse(dateStr, out DateOnly printDate))
+                //                     {
+                //                         releaseDates.Add(printDate);
+                //                     }
+                //                 }
+                //             }
+
+                //             if (releaseDates.Any())
+                //             {
+                //                 card.ReleaseDate = releaseDates.Min(); // Earliest printing
+                //             }
+                //         }
+                //     }
+                // }
+
                 card.Oracle_Text = cardElement.GetProperty("oracle_text").GetString();
                 cardList.Add(card);
             }
@@ -205,6 +286,21 @@
         int randomIndex = rnd.Next(0, cardList.Count);
         correctCard = cardList[randomIndex];
 
+        using (JsonDocument document = JsonDocument.Parse(json))
+        {
+            JsonElement root = document.RootElement;
+            foreach(JsonElement cardElement in root.GetProperty("data").EnumerateArray())
+            {
+                if (cardElement.TryGetProperty("prints_search_uri", out JsonElement printsSearchUriElement))
+                {
+                    string printsSearchUri = printsSearchUriElement.GetString();
+                    if (!string.IsNullOrEmpty(printsSearchUri))
+                    {
+                        listOfPrints += $"<a href='{printsSearchUri}' target='_blank'>Prints</a> ";
+                    }
+                }
+            }
+        }
     }
 
 

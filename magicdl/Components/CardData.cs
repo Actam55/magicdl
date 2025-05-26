@@ -19,7 +19,7 @@ namespace magicdl.Components
                     Rarity = "Common",
                     Type = new List<string> {"Instant"},
                     Color = new List<string> {"R" },
-                    CMC = "1"
+                    CMC = 1
                 },
                 new MTGCard
                 {
@@ -29,7 +29,7 @@ namespace magicdl.Components
                     Rarity = "Rare",
                     Type = new List<string> {"Artifact"},
                     Color = new List<string> {""},
-                    CMC = "0"
+                    CMC = 0
                 },
                 new MTGCard
                 {
@@ -39,7 +39,7 @@ namespace magicdl.Components
                     Rarity = "Uncommon",
                     Type = new List<string> {"Instant" },
                     Color = new List < string > { "B" },
-                    CMC = "2"
+                    CMC = 2
                 }
                 // Add more as needed
             };
