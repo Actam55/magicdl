@@ -10,15 +10,15 @@ The game is a project I am working on to practice web development skills, includ
 - Unlimited attempts to guess the card
 
 ## Future Features
-- [ ] Get card data from the Scryfall API instead of a local file
+- [x] Get card data from the Scryfall API instead of a local file
 
-- [ ] Set a random card as the card to guess from the Scryfall API
+- [x] Set a random card as the card to guess from the Scryfall API
 
-- [ ] Add a auto complete feature to suggest card names based on what the user has typed so far
+- [x] Add a auto complete feature to suggest card names based on what the user has typed so far
 
 - [ ] Add a difficulty setting to limit the number of cards to guess from
 
-- [ ] For CMC add an arrow to indicate if the CMC is higher or lower than the card you are guessing
+- [x] For CMC add an arrow to indicate if the CMC is higher or lower than the card you are guessing
 
 - [ ] Host the webapp so people can use it
 
