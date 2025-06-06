@@ -26,5 +26,5 @@ The game is a project I am working on to practice web development skills, includ
 
 - [ ] Add a timer to see how fast you can guess the card
 
-- [ ] Add a hint feature to give you a hint about the card
+- [x] Add a hint feature to give you a hint about the card
 
