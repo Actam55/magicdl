@@ -37,27 +37,37 @@
 
 
 <div class="d-flex p-3 justify-content-center">
-    <h1>Magicdl</h1>
+    <h1 class="custom-font display-1">Magicdle</h1>
 </div>
-<Button @onclick="GetCardListAsync" class="btn btn-primary">Get Card List</Button>
-<Button @onclick="GetHint" class="btn btn-primary">Get a hint</Button>
-@if (hintGotten)
-{
-    <p>Hint: '@correctCard.Oracle_Text'</p>
-}
 
-<p>Correct: '@correctCard.Name'</p>
 
-<div class="d-flex p-3 justify-content-center">
-    <AutoComplete @bind-Value="currentGuessString" 
-        TItem="MTGCard" 
-        DataProvider="CardListProvider" 
-        PropertyName="Name" 
-        Placeholder="Search for a card" 
-        OnChanged="(MTGCard card) => OnAutoCompleteChanged(card)"
-        Disabled="@disabled"
-        Size="AutoCompleteSize.Large" />
-</div> 
+
+@* <p>Correct: '@correctCard.Name'</p> *@
+<div container>
+    <div class="row d-flex p-3 justify-content-center align-items-center ">
+        @if (hintGotten)
+            {
+            <div class="col-md-3 border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center">
+                <p>
+                    Hint: @correctCard.Oracle_Text
+                </p>
+            </div>
+        }
+        <div class="col-md-1">
+            <Button @onclick="GetHint" class="btn btn-primary">Get a hint</Button>
+        </div>
+        <div class="col-md-3">
+            <AutoComplete @bind-Value="currentGuessString" 
+                TItem="MTGCard" 
+                DataProvider="CardListProvider" 
+                PropertyName="Name" 
+                Placeholder="Search for a card" 
+                OnChanged="(MTGCard card) => OnAutoCompleteChanged(card)"
+                Disabled="@disabled"
+                Size="AutoCompleteSize.Large" />
+        </div>
+    </div>
+</div>
 
 <div class="container text-center">
     <div class="row mb-2 p-3 me-3 justify-content-center">

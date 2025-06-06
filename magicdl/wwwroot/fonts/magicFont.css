@@ -1,0 +1,9 @@
+﻿@font-face {
+    font-family: 'MyCustomFont';
+    src: url('/fonts/Magim___.ttf') format('truetype'); /* Use root-relative path & correct format */
+    font-weight: normal;
+    font-style: normal;
+}
+.custom-font {
+    font-family: 'MyCustomFont', sans-serif;
+}
