@@ -39,6 +39,10 @@
 
 <Button @onclick="GetCardListAsync" class="btn btn-primary">Get Card List</Button>
 <Button @onclick="GetHint" class="btn btn-primary">Get a hint</Button>
+@if (hintGotten)
+{
+    <p>Hint: '@correctCard.Oracle_Text'</p>
+}
 
 <p>Correct: '@correctCard.Name'</p>
 
@@ -54,23 +58,26 @@
 </div> 
 
 <div class="container text-center">
-    <div class="row mb-2 p-2 justify-content-center">
-        <div class="col border rounded fw-bold p-3 me-3 word-wrap-box">
+    <div class="row mb-2 p-3 me-3 justify-content-center">
+        <div class="col border rounded fw-bold p-3 me-3">
+            Card Image
+        </div>
+        <div class="col border rounded fw-bold p-3 me-3">
             Card Name
         </div>
-        <div class="col border rounded fw-bold p-3 me-3 word-wrap-box">
+        <div class="col border rounded fw-bold p-3 me-3">
             Card Type
         </div>
-        <div class="col border rounded fw-bold p-3 me-3 word-wrap-box">
+        <div class="col border rounded fw-bold p-3 me-3">
             Identification
         </div>
-        <div class="col border rounded fw-bold p-3 me-3 word-wrap-box">
+        <div class="col border rounded fw-bold p-3 me-3">
             Keywords
         </div>
-        <div class="col border rounded fw-bold p-3 me-3 word-wrap-box">
+        <div class="col border rounded fw-bold p-3 me-3">
             Release Date
         </div>
-        <div class="col border rounded fw-bold p-3 word-wrap-box">
+        <div class="col border rounded fw-bold p-3 me-3">
             CMC
         </div>
     </div>
@@ -79,12 +86,15 @@
 <div class="container text-center">
     @foreach (MTGCard guess in guessHistory)
     {
-        <div class="row mb-2 p-2 justify-content-center">
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.Name.Equals(correctCard.Name, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.Name </div>
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @MatchLevelToCssClass(GetMatchLevel(guess.Keywords, correctCard.Keywords))">@string.Join(", ", guess.Keywords)</div>
-            <div class="col border rounded fw-bold p-3 me-3 word-wrap-box @(guess.ReleaseDate?.Year == correctCard.ReleaseDate?.Year ? "bg-success" : "bg-danger")">
+        <div class="row p-3 me-3 justify-content-center">
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center">
+                <img src="@guess.ImageUrl" style="max-width: 130px;" />
+            </div>
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @(guess.Name.Equals(correctCard.Name, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.Name </div>
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @MatchLevelToCssClass(GetMatchLevel(guess.Keywords, correctCard.Keywords))">@string.Join(", ", guess.Keywords)</div>
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @(guess.ReleaseDate?.Year == correctCard.ReleaseDate?.Year ? "bg-success" : "bg-danger")">
                 @if (guess.ReleaseDate.HasValue)
                 {
                     @guess.ReleaseDate.Value.Year
@@ -101,7 +111,7 @@
                     }
                 }
             </div>
-            <div class="col border rounded fw-bold p-3 word-wrap-box @(guess.CMC == correctCard.CMC ? "bg-success" : "bg-danger")">
+            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @(guess.CMC == correctCard.CMC ? "bg-success" : "bg-danger")">
                 @guess.CMC
                 @if (guess.CMC < correctCard.CMC)
                 {
@@ -131,6 +141,7 @@
     private List<string> keywords = new List<string>();
     private bool disabled = false;
     private bool showSuccessAlert = false;
+    private bool hintGotten = false;
 
     public enum MatchLevel
     {
@@ -296,17 +307,34 @@
 
 
                 card.Oracle_Text = cardElement.GetProperty("oracle_text").GetString();
+
+                if (cardElement.TryGetProperty("image_uris", out JsonElement imageUris))
+                {
+                    if (imageUris.TryGetProperty("art_crop", out JsonElement imageUrl))
+                    {
+                        card.ImageUrl = imageUrl.GetString();
+                    }
+                }
                 cardList.Add(card);
             }
         }
         cardsFound = cardList.Count();
         int randomIndex = rnd.Next(0, cardList.Count);
         correctCard = cardList[randomIndex];
+        hintGotten = false;
         keywords = correctCard.Keywords;
     }
 
     void GetHint()
     {
-        
+        hintGotten = true;
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetCardListAsync();
+        }
+    }
+
 }
