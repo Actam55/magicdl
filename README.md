@@ -24,7 +24,6 @@ The game is a project I am working on to practice web development skills, includ
 
 - [ ] Add a win animation when you guess the card correctly
 
-- [ ] Add a timer to see how fast you can guess the card
+- [x] Add a hint feature to give you a hint about the card
 
-- [ ] Add a hint feature to give you a hint about the card
-
+- [ ] Add a settings option for difficulty and theme etc.
