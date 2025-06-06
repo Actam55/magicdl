@@ -38,5 +38,4 @@ C:\Users\l1999\source\repos\magicdl\magicdl\bin\Debug\net8.0\Microsoft.JSInterop
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\magicdl.csproj.AssemblyReference.cache
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\magicdl.csproj.Up2Date
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\scopedcss\Components\Layout\MainLayout.razor.rz.scp.css
-C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\scopedcss\projectbundle\magicdl.bundle.scp.css

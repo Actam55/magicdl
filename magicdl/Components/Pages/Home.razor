@@ -8,10 +8,8 @@
         word-break: break-word;
         overflow-wrap: break-word;
     }
-    .autocomplete-item:focus,
-    .autocomplete-item.active {
-      background-color: #007bff;
-      color: white;
+    .dropdown-menu .dropdown-item-highlight{
+        background-color: var(--bs-tertiary-bg);
     }
 </style>
 
@@ -37,6 +35,10 @@
     </div>
 }
 
+
+<div class="d-flex p-3 justify-content-center">
+    <h1>Magicdl</h1>
+</div>
 <Button @onclick="GetCardListAsync" class="btn btn-primary">Get Card List</Button>
 <Button @onclick="GetHint" class="btn btn-primary">Get a hint</Button>
 @if (hintGotten)
