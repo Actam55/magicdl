@@ -3,7 +3,6 @@ using magicdl.Components;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddBlazorBootstrap();
-builder.Services.AddScoped<magicdl.Components.Data.ScryfallAPI>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

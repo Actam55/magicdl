@@ -1,4 +1,5 @@
 ﻿@page "/"
+@inject IJSRuntime JS
 
 <style>
     .word-wrap-box {
@@ -14,36 +15,71 @@
 </style>
 
 <PageTitle>Home</PageTitle>
-@if (showSuccessAlert)
+
+<Modal @ref='modal'> @* Victory Component *@
+    <BodyTemplate>
+        <div class="row d-flex p-3 justify-content-center text-center">
+            <h3 class="custom-font"> Congratulations! </h3>
+        </div>
+        @if(guessHistory.Count() == 1)
+        {
+            <div class=" row d-flex p-3 justify-content-center text-center">
+                <h3 class="custom-font"> You guessed the correct card on you first try! </h3>
+            </div>
+        }
+        else{
+            <div class=" row d-flex p-3 justify-content-center text-center">
+                <h3 class="custom-font"> You guessed the correct card with @guessHistory.Count() guesses! </h3>
+            </div>
+        }
+        <div class="row d-flex p-3 justify-content-center align-items-center">
+            <img src="@correctCard.FullCardImage" />
+        </div>
+    </BodyTemplate>
+</Modal>
+
+@if (isLoading) @* Loading *@
 {
-    <div>
-        <Alert Color="AlertColor.Success">
-            <h4 class="alert-heading">Congratulations!</h4>
-            @if(guessHistory.Count <= 1)
-            {
-                <p>You correctly guessed todays card on the first try!</p>
-            }
-            else if (guessHistory.Count < 5)
-            {
-                <p>You correctly guessed todays card with only @guessHistory.Count guesses!</p>
-            }
-            else
-            {
-                <p>You correctly guessed todays card with @guessHistory.Count guesses!</p>
-            }
-        </Alert>
+    <div class="position-absolute start-0 m-3 spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
     </div>
 }
 
-
-<div class="d-flex p-3 justify-content-center">
+<div class="position-absolute end-0 m-3" @ref="settingsMenuRef"> @* Settings *@
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" @onclick="ToggleSettingsMenu">
+            ⚙️ Settings
+        </button>
+        @if (settingsMenuOpen)
+        {
+            <div class="dropdown-menu dropdown-menu-end show">
+                <button class="dropdown-item" @onclick="() => ToggleTheme()">Toggle Theme</button>
+                <div class="dropdown-item">
+                    Difficulty:
+                    <select value="@nrOfPagesToGet" @onchange="OnDifficultyChanged" class="form-select mt-1">
+                        <option value="1">Easy</option>
+                        <option value="3">Medium</option>
+                        <option value="6">Hard</option>
+                    </select>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<div class="d-flex p-3 justify-content-center"> @* Title *@
     <h1 class="custom-font display-1">Magicdle</h1>
 </div>
 
+@if (currentGuess == correctCard)@* Play again*@
+{
+    <div class="d-flex p-3 justify-content-center">
+        <Button @onclick="PlayAgain" class="btn btn-success" Size="ButtonSize.Large"> Play Again!</Button>
+    </div>
+}
 
-
-@* <p>Correct: '@correctCard.Name'</p> *@
-<div container>
+<p>Correct: '@correctCard.Name'</p>
+<p>Cards Gotten: '@cardCount'</p>
+<div container> @* Hint and Search *@
     <div class="row d-flex p-3 justify-content-center align-items-center ">
         @if (hintGotten)
             {
@@ -54,7 +90,7 @@
             </div>
         }
         <div class="col-md-1">
-            <Button @onclick="GetHint" class="btn btn-primary">Get a hint</Button>
+            <Button @onclick="GetHint" class="btn btn-primary">Get a Hint</Button>
         </div>
         <div class="col-md-3">
             <AutoComplete @bind-Value="currentGuessString" 
@@ -63,19 +99,16 @@
                 PropertyName="Name" 
                 Placeholder="Search for a card" 
                 OnChanged="(MTGCard card) => OnAutoCompleteChanged(card)"
-                Disabled="@disabled"
+                Disabled="@(disabled || isLoading)"
                 Size="AutoCompleteSize.Large" />
         </div>
     </div>
 </div>
 
-<div class="container text-center">
+<div class="container text-center"> @* Card Identifiers *@
     <div class="row mb-2 p-3 me-3 justify-content-center">
         <div class="col border rounded fw-bold p-3 me-3">
-            Card Image
-        </div>
-        <div class="col border rounded fw-bold p-3 me-3">
-            Card Name
+            Card
         </div>
         <div class="col border rounded fw-bold p-3 me-3">
             Card Type
@@ -95,14 +128,14 @@
     </div>
 </div>
 
-<div class="container text-center">
+<div class="container text-center"> @* Card Guesses *@
     @foreach (MTGCard guess in guessHistory)
     {
         <div class="row p-3 me-3 justify-content-center">
-            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center">
-                <img src="@guess.ImageUrl" style="max-width: 130px;" />
+            <div class="col border rounded fw-bold p-3 me-3 d-flex flex-column justify-content-center align-items-center @(guess.Name.Equals(correctCard.Name, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">
+                <div class="text-center mb-2">@guess.Name</div>
+                <img src="@guess.ImageUrl" style="max-width: 130px;" class="img-fluid rounded" />
             </div>
-            <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @(guess.Name.Equals(correctCard.Name, StringComparison.OrdinalIgnoreCase) ? "bg-success" : "bg-danger")">@guess.Name </div>
             <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @MatchLevelToCssClass(GetMatchLevel(guess.Type, correctCard.Type))">@string.Join(", ", guess.Type)</div>
             <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @MatchLevelToCssClass(GetMatchLevel(guess.Color, correctCard.Color))">@string.Join(", ", guess.Color)</div>
             <div class="col border rounded fw-bold p-3 me-3 d-flex justify-content-center align-items-center @MatchLevelToCssClass(GetMatchLevel(guess.Keywords, correctCard.Keywords))">@string.Join(", ", guess.Keywords)</div>
@@ -112,11 +145,11 @@
                     @guess.ReleaseDate.Value.Year
                     @if (guess.ReleaseDate.Value.Year < correctCard.ReleaseDate?.Year)
                     {
-                        <span>⬆️</span> <!-- Guessed card is from an earlier year -->
+                        <span>⬆️</span>
                     }
                     else if (guess.ReleaseDate.Value.Year > correctCard.ReleaseDate?.Year)
                     {
-                        <span>⬇️</span> <!-- Guessed card is from a later year -->
+                        <span>⬇️</span>
                     }
                     else
                     {
@@ -127,11 +160,11 @@
                 @guess.CMC
                 @if (guess.CMC < correctCard.CMC)
                 {
-                    <span>⬆️</span> <!-- Guessed card has lower CMC -->
+                    <span>⬆️</span>
                 }
                 else if (guess.CMC > correctCard.CMC)
                 {
-                    <span>⬇️</span> <!-- Guessed card has higher CMC -->
+                    <span>⬇️</span>
                 }
                 else
                 {
@@ -149,11 +182,35 @@
     private string currentGuessString = string.Empty;
     private HttpResponseMessage response = new HttpResponseMessage();
     private string json = string.Empty;
-    private int cardsFound;
-    private List<string> keywords = new List<string>();
     private bool disabled = false;
-    private bool showSuccessAlert = false;
+    private bool isLoading = false;
     private bool hintGotten = false;
+    private bool settingsMenuOpen = false;
+    private string currentTheme = "dark";
+    private ElementReference settingsMenuRef;
+    private Modal modal = default!;
+    private int cardCount;
+    private int nrOfPagesToGet = 1;
+
+    public async Task PlayAgain()
+    {
+        isLoading = true;
+        await GetCardListAsync();
+        isLoading = false;
+        disabled = false;
+    }
+
+    private async Task OnDifficultyChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int pages))
+        {
+            nrOfPagesToGet = pages;
+            isLoading = true;
+            await GetCardListAsync();
+            isLoading = false;
+            disabled = false;
+        }
+    }
 
     public enum MatchLevel
     {
@@ -194,23 +251,24 @@
         return await Task.FromResult(request.ApplyTo(filteredCardList));
     }
 
-    private void OnAutoCompleteChanged(MTGCard card)
+    private async Task OnAutoCompleteChanged(MTGCard card)
     {
         if (card is null || string.IsNullOrEmpty(card.Name))
         {
             // Display message or toast
             Console.WriteLine("Card not found.");
-            return;
         }
-
-        currentGuess = card;
-        guessHistory.Insert(0, currentGuess);
-        cardList.Remove(currentGuess);
-        currentGuessString = string.Empty;
-        if(currentGuess.Name == correctCard.Name)
+        else
         {
-            disabled = true;
-            showSuccessAlert = true;
+            currentGuess = card;
+            guessHistory.Insert(0, currentGuess);
+            cardList.Remove(currentGuess);
+            currentGuessString = string.Empty;
+            if(currentGuess.Name == correctCard.Name)
+                {
+                    disabled = true;
+                    await modal.ShowAsync();
+                }
         }
     }
 
@@ -278,69 +336,92 @@
         HttpClient client = new HttpClient();
         client.DefaultRequestHeaders.UserAgent.ParseAdd("Magicdl/1.0");
         client.DefaultRequestHeaders.Accept.ParseAdd(("application/json;q=0.9,*/*;q=0.8"));
-        response = await client.GetAsync("https://api.scryfall.com/cards/search?order=edhrec&dir=asc&q=id%3Awubrg+-t=land+prefer%3Aoldest&page=1");
-        json = await response.Content.ReadAsStringAsync();
 
-        using (JsonDocument document = JsonDocument.Parse(json))
+        for (int i = 1; i <= nrOfPagesToGet; i++)
         {
-            JsonElement root = document.RootElement;
-            foreach (JsonElement cardElement in root.GetProperty("data").EnumerateArray())
+            response = await client.GetAsync($"https://api.scryfall.com/cards/search?order=edhrec&dir=asc&q=id%3Awubrg+-t=land+prefer%3Aoldest&page={i}");
+            json = await response.Content.ReadAsStringAsync();
+
+            using (JsonDocument document = JsonDocument.Parse(json))
             {
-                MTGCard card = new MTGCard();
-                card.Name = cardElement.GetProperty("name").GetString();
-                card.CMC = cardElement.GetProperty("cmc").GetDouble();
-                string typeLine = cardElement.GetProperty("type_line").GetString();
-                string beforeDash = typeLine.Split('—')[0].Trim();
-                card.Type = beforeDash.Split(' ').ToList();
-                card.Color = cardElement.GetProperty("color_identity").EnumerateArray().Select(c => c.GetString()).ToList();
-                if(card.Color.Count == 0)
+                JsonElement root = document.RootElement;
+                foreach (JsonElement cardElement in root.GetProperty("data").EnumerateArray())
                 {
-                    card.Color.Add("Colorless");
-                }
-                string releaseDateStr = cardElement.GetProperty("released_at").GetString();
-                if (DateOnly.TryParse(releaseDateStr, out DateOnly parsedDate))
-                {
-                    card.ReleaseDate = parsedDate;
-                }
-                else
-                {
-                    card.ReleaseDate = null;
-                }
-                if (cardElement.TryGetProperty("keywords", out JsonElement keywordsElement))
-                {
-                    List<string?> keywords = keywordsElement.EnumerateArray().Select(k => k.GetString()).Where(k => !string.IsNullOrEmpty(k)).ToList();
-
-                    card.Keywords = keywords.Any() ? keywords : new List<string> { "None" };
-                }
-                else
-                {
-                    card.Keywords = new List<string> { "None" };
-                }
-
-
-                card.Oracle_Text = cardElement.GetProperty("oracle_text").GetString();
-
-                if (cardElement.TryGetProperty("image_uris", out JsonElement imageUris))
-                {
-                    if (imageUris.TryGetProperty("art_crop", out JsonElement imageUrl))
+                    MTGCard card = new MTGCard();
+                    card.Name = cardElement.GetProperty("name").GetString();
+                    card.CMC = cardElement.GetProperty("cmc").GetDouble();
+                    if (cardElement.TryGetProperty("type_line", out JsonElement typeLineElement))
                     {
-                        card.ImageUrl = imageUrl.GetString();
+                        string typeLine = typeLineElement.GetString() ?? "";
+                        string beforeDash = typeLine.Split('—')[0].Trim();
+                        card.Type = beforeDash.Split(' ').ToList();
                     }
+                    else
+                    {
+                        card.Type = new List<string> { "Unknown" };
+                    }
+                    card.Color = cardElement.GetProperty("color_identity").EnumerateArray().Select(c => c.GetString()).ToList();
+                    if(card.Color.Count == 0)
+                    {
+                        card.Color.Add("Colorless");
+                    }
+                    string releaseDateStr = cardElement.GetProperty("released_at").GetString();
+                    
+                    if (DateOnly.TryParse(releaseDateStr, out DateOnly parsedDate))
+                    {
+                        card.ReleaseDate = parsedDate;
+                    }
+                    else
+                    {
+                        card.ReleaseDate = null;
+                    }
+                    
+                    if (cardElement.TryGetProperty("keywords", out JsonElement keywordsElement))
+                    {
+                        List<string?> keywords = keywordsElement.EnumerateArray().Select(k => k.GetString()).Where(k => !string.IsNullOrEmpty(k)).ToList();
+
+                        card.Keywords = keywords.Any() ? keywords : new List<string> { "None" };
+                    }
+                    else
+                    {
+                        card.Keywords = new List<string> { "None" };
+                    }
+
+                    if (cardElement.TryGetProperty("oracle_text", out JsonElement oracleTextElement))
+                    {
+                        card.Oracle_Text = oracleTextElement.GetString();
+                    }
+                    else
+                    {
+                        card.Oracle_Text = "";
+                    }
+
+                    if (cardElement.TryGetProperty("image_uris", out JsonElement imageUris))
+                    {
+                        if (imageUris.TryGetProperty("art_crop", out JsonElement imageUrl))
+                        {
+                            card.ImageUrl = imageUrl.GetString();
+                        }
+                        if (imageUris.TryGetProperty("border_crop", out JsonElement FullCardImage))
+                        {
+                            card.FullCardImage = FullCardImage.GetString();
+                        }
+                    }
+                    cardList.Add(card);
                 }
-                cardList.Add(card);
             }
         }
-        cardsFound = cardList.Count();
         int randomIndex = rnd.Next(0, cardList.Count);
         correctCard = cardList[randomIndex];
         hintGotten = false;
-        keywords = correctCard.Keywords;
+        cardCount = cardList.Count();
     }
 
     void GetHint()
     {
         hintGotten = true;
     }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -349,4 +430,31 @@
         }
     }
 
+    private async Task ToggleSettingsMenu()
+    {
+        settingsMenuOpen = !settingsMenuOpen;
+
+        if (settingsMenuOpen)
+        {
+            await JS.InvokeVoidAsync("registerOutsideClickHandler", settingsMenuRef, DotNetObjectReference.Create(this));
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("unregisterOutsideClickHandler");
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        currentTheme = currentTheme == "dark" ? "light" : "dark";
+        await JS.InvokeVoidAsync("setTheme", currentTheme);
+    }
+
+    [JSInvokable]
+    public async Task CloseSettingsMenu()
+    {
+        settingsMenuOpen = false;
+        await InvokeAsync(StateHasChanged);
+        await JS.InvokeVoidAsync("unregisterOutsideClickHandler");
+    }
 }

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\l1999\\Source\\Repos\\magicdl\\magicdl\\magicdl.csproj": {}
+    "C:\\Users\\l1999\\source\\repos\\magicdl\\magicdl\\magicdl.csproj": {}
   },
   "projects": {
-    "C:\\Users\\l1999\\Source\\Repos\\magicdl\\magicdl\\magicdl.csproj": {
+    "C:\\Users\\l1999\\source\\repos\\magicdl\\magicdl\\magicdl.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\l1999\\Source\\Repos\\magicdl\\magicdl\\magicdl.csproj",
+        "projectUniqueName": "C:\\Users\\l1999\\source\\repos\\magicdl\\magicdl\\magicdl.csproj",
         "projectName": "magicdl",
-        "projectPath": "C:\\Users\\l1999\\Source\\Repos\\magicdl\\magicdl\\magicdl.csproj",
+        "projectPath": "C:\\Users\\l1999\\source\\repos\\magicdl\\magicdl\\magicdl.csproj",
         "packagesPath": "C:\\Users\\l1999\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\l1999\\Source\\Repos\\magicdl\\magicdl\\obj\\",
+        "outputPath": "C:\\Users\\l1999\\source\\repos\\magicdl\\magicdl\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
