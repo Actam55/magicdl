@@ -192,6 +192,14 @@
     private int cardCount;
     private int nrOfPagesToGet = 1;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetCardListAsync();
+        }
+    }
+
     public async Task PlayAgain()
     {
         isLoading = true;
@@ -265,10 +273,10 @@
             cardList.Remove(currentGuess);
             currentGuessString = string.Empty;
             if(currentGuess.Name == correctCard.Name)
-                {
-                    disabled = true;
-                    await modal.ShowAsync();
-                }
+            {
+                disabled = true;
+                await modal.ShowAsync();
+            }
         }
     }
 
@@ -304,11 +312,13 @@
             //Give a message that the card was not found.
             return;
         }
+        else
+        {
+            guessHistory.Insert(0, currentGuess);
+            currentGuessString = string.Empty;
 
-        guessHistory.Insert(0, currentGuess);
-        currentGuessString = string.Empty;
-
-        StateHasChanged();
+            StateHasChanged();
+        }
     }
 
     public MTGCard SetCard(string? value)
@@ -348,8 +358,22 @@
                 foreach (JsonElement cardElement in root.GetProperty("data").EnumerateArray())
                 {
                     MTGCard card = new MTGCard();
-                    card.Name = cardElement.GetProperty("name").GetString();
-                    card.CMC = cardElement.GetProperty("cmc").GetDouble();
+                    if (cardElement.TryGetProperty("name", out JsonElement nameElement))
+                    {
+                        card.Name = nameElement.GetString();
+                    }
+                    else
+                    {
+                        card.Name = "Unknown"; // Or handle it appropriately
+                    }
+                    if (cardElement.TryGetProperty("cmc", out JsonElement cmcElement))
+                    {
+                        card.CMC = cmcElement.GetDouble();
+                    }
+                    else
+                    {
+                        card.CMC = null; // Or another default/fallback value
+                    }
                     if (cardElement.TryGetProperty("type_line", out JsonElement typeLineElement))
                     {
                         string typeLine = typeLineElement.GetString() ?? "";
@@ -420,14 +444,6 @@
     void GetHint()
     {
         hintGotten = true;
-    }
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await GetCardListAsync();
-        }
     }
 
     private async Task ToggleSettingsMenu()
