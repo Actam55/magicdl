@@ -1,5 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@inject IJSRuntime JS
 
 <div class="bb-page">
     <main>
@@ -9,59 +8,6 @@
     </main>
 </div>
 
-<!-- Settings Button and Menu -->
-<div class="position-absolute top-0 end-0 m-3" @ref="settingsMenuRef">
-    <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" @onclick="ToggleSettingsMenu">
-            ⚙️ Settings
-        </button>
-        @if (settingsMenuOpen)
-        {
-            <div class="dropdown-menu dropdown-menu-end show">
-                <button class="dropdown-item" @onclick="() => ToggleTheme()">Toggle Theme</button>
-                @* <button class="dropdown-item" @onclick="() => DoSomethingElse()">Difficulty</button> *@
-            </div>
-        }
-    </div>
-</div>
-
-
 @code {
-    private bool settingsMenuOpen = false;
-    private string currentTheme = "dark";
-    private ElementReference settingsMenuRef;
-
-
-    private async Task ToggleSettingsMenu()
-    {
-        settingsMenuOpen = !settingsMenuOpen;
-
-        if (settingsMenuOpen)
-        {
-            await JS.InvokeVoidAsync("registerOutsideClickHandler", settingsMenuRef, DotNetObjectReference.Create(this));
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("unregisterOutsideClickHandler");
-        }
-    }
-
-    private async Task ToggleTheme()
-    {
-        currentTheme = currentTheme == "dark" ? "light" : "dark";
-        await JS.InvokeVoidAsync("setTheme", currentTheme);
-    }
-
-    void DoSomethingElse()
-    {
-        // Action for Option 2
-    }
-
-    [JSInvokable]
-    public async Task CloseSettingsMenu()
-    {
-        settingsMenuOpen = false;
-        await InvokeAsync(StateHasChanged);
-        await JS.InvokeVoidAsync("unregisterOutsideClickHandler");
-    }
+    
 }

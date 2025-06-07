@@ -4,6 +4,7 @@
     {
         public string Name { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
+        public string FullCardImage { get; set; } = string.Empty;
         public string Rarity { get; set; } = string.Empty;
         public double? CMC { get; set; } = null;
         public List<string> SetApperances { get; set; } = new List<string>();

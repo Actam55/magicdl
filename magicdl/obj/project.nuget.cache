@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hdmb30ZMslM=",
+  "dgSpecHash": "BVrXTz1gR0Q=",
   "success": true,
-  "projectFilePath": "C:\\Users\\l1999\\Source\\Repos\\magicdl\\magicdl\\magicdl.csproj",
+  "projectFilePath": "C:\\Users\\l1999\\source\\repos\\magicdl\\magicdl\\magicdl.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\l1999\\.nuget\\packages\\blazor.bootstrap\\3.3.1\\blazor.bootstrap.3.3.1.nupkg.sha512",
     "C:\\Users\\l1999\\.nuget\\packages\\microsoft.aspnetcore.authorization\\8.0.11\\microsoft.aspnetcore.authorization.8.0.11.nupkg.sha512",
