@@ -16,7 +16,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<Modal @ref='modal'> @* Victory Component *@
+<Modal @ref='winModal'> @* Victory Component *@
     <BodyTemplate>
         <div class="row d-flex p-3 justify-content-center text-center">
             <h3 class="custom-font"> Congratulations! </h3>
@@ -24,7 +24,7 @@
         @if(guessHistory.Count() == 1)
         {
             <div class=" row d-flex p-3 justify-content-center text-center">
-                <h3 class="custom-font"> You guessed the correct card on you first try! </h3>
+                <h3 class="custom-font"> You guessed the correct card on your first try! </h3>
             </div>
         }
         else{
@@ -37,6 +37,21 @@
         </div>
     </BodyTemplate>
 </Modal>
+
+<Modal @ref='lossModal'> @* Loss Component *@
+    <BodyTemplate>
+        <div class="row d-flex p-3 justify-content-center text-center">
+            <h3 class="custom-font"> Better Luck Next Time! </h3>
+        </div>
+            <div class=" row d-flex p-3 justify-content-center text-center">
+                <h3 class="custom-font"> The correct card was @correctCard.Name </h3>
+            </div>
+        <div class="row d-flex p-3 justify-content-center align-items-center">
+            <img src="@correctCard.FullCardImage" />
+        </div>
+    </BodyTemplate>
+</Modal>
+
 
 @if (isLoading) @* Loading *@
 {
@@ -70,15 +85,15 @@
     <h1 class="custom-font display-1">Magicdle</h1>
 </div>
 
-@if (currentGuess == correctCard)@* Play again*@
+@if (currentGuess == correctCard || gameHasEnded)@* Play again*@
 {
     <div class="d-flex p-3 justify-content-center">
         <Button @onclick="PlayAgain" class="btn btn-success" Size="ButtonSize.Large"> Play Again!</Button>
     </div>
 }
 
-<p>Correct: '@correctCard.Name'</p>
-<p>Cards Gotten: '@cardCount'</p>
+@* <p>Correct: '@correctCard.Name'</p>
+<p>Cards Gotten: '@cardCount'</p> *@
 <div container> @* Hint and Search *@
     <div class="row d-flex p-3 justify-content-center align-items-center ">
         @if (hintGotten)
@@ -90,7 +105,7 @@
             </div>
         }
         <div class="col-md-1">
-            <Button @onclick="GetHint" class="btn btn-primary">Get a Hint</Button>
+            <Button @onclick="GetHint" class="btn btn-primary" Disabled="gameHasEnded">Get a Hint</Button>
         </div>
         <div class="col-md-3">
             <AutoComplete @bind-Value="currentGuessString" 
@@ -99,8 +114,11 @@
                 PropertyName="Name" 
                 Placeholder="Search for a card" 
                 OnChanged="(MTGCard card) => OnAutoCompleteChanged(card)"
-                Disabled="@(disabled || isLoading)"
+                Disabled="@(isLoading || gameHasEnded)"
                 Size="AutoCompleteSize.Large" />
+        </div>
+        <div class ="col-md-1">
+            <Button @onclick="GiveUp" class="btn btn-danger" Disabled="gameHasEnded">Give Up</Button>
         </div>
     </div>
 </div>
@@ -182,13 +200,14 @@
     private string currentGuessString = string.Empty;
     private HttpResponseMessage response = new HttpResponseMessage();
     private string json = string.Empty;
-    private bool disabled = false;
     private bool isLoading = false;
     private bool hintGotten = false;
     private bool settingsMenuOpen = false;
+    private bool gameHasEnded = false;
     private string currentTheme = "dark";
     private ElementReference settingsMenuRef;
-    private Modal modal = default!;
+    private Modal winModal = default!;
+    private Modal lossModal = default!;
     private int cardCount;
     private int nrOfPagesToGet = 1;
 
@@ -205,7 +224,7 @@
         isLoading = true;
         await GetCardListAsync();
         isLoading = false;
-        disabled = false;
+        gameHasEnded = false;
     }
 
     private async Task OnDifficultyChanged(ChangeEventArgs e)
@@ -216,7 +235,7 @@
             isLoading = true;
             await GetCardListAsync();
             isLoading = false;
-            disabled = false;
+            gameHasEnded = false;
         }
     }
 
@@ -274,10 +293,15 @@
             currentGuessString = string.Empty;
             if(currentGuess.Name == correctCard.Name)
             {
-                disabled = true;
-                await modal.ShowAsync();
+                gameHasEnded = true;
+                await winModal.ShowAsync();
             }
         }
+    }
+    private async Task GiveUp()
+    {
+        gameHasEnded = true;
+        await lossModal.ShowAsync();
     }
 
     public MatchLevel GetMatchLevel(List<string> guessList, List<string> correctList)

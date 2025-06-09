@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("magicdl")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+afb721d46f773667d35f45bdf90b93d16f832241")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1dd54622d15de39a32287fe4f997def427ad0410")]
 [assembly: System.Reflection.AssemblyProductAttribute("magicdl")]
 [assembly: System.Reflection.AssemblyTitleAttribute("magicdl")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
