@@ -38,4 +38,3 @@ C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\staticwebassets.bui
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\magicdl.csproj.Up2Date
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\magicdl.genruntimeconfig.cache
 C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\ref\magicdl.dll
-C:\Users\l1999\source\repos\magicdl\magicdl\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

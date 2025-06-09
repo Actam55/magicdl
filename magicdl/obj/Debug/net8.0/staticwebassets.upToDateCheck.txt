@@ -1,4 +1,0 @@
-wwwroot\app.css
-wwwroot\faviconWizard.png
-wwwroot\fonts\magicFont.css
-wwwroot\fonts\Magim___.ttf
